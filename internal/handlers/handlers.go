@@ -2,18 +2,35 @@ package handlers
 
 import (
 	"fmt"
+	"html/template"
+	"log"
 	"net/http"
 	"strconv"
 )
 
 func Home(w http.ResponseWriter, r *http.Request) {
-
 	if r.URL.Path != "/" {
 		http.NotFound(w, r)
 		return
 	}
 
-	w.Write([]byte("Hello, this is home page"))
+	files := []string{
+		"./frontend/html/base.html",
+		"./frontend/html/pages/index.html",
+	}
+
+	ts, err := template.ParseFiles(files...)
+	if err != nil {
+		log.Println("Failed to parse templates: ", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	if err := ts.ExecuteTemplate(w, "base", nil); err != nil {
+		log.Println("Failed to execute template: ", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
 }
 
 func SnippetCreate(w http.ResponseWriter, r *http.Request) {
