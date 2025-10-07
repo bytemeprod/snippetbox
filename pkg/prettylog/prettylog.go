@@ -23,7 +23,7 @@ func NewPrettyHandler(w io.Writer, opts slog.HandlerOptions) *PrettyHandler {
 }
 
 func (h *PrettyHandler) Handle(ctx context.Context, record slog.Record) error {
-	level := record.Level.String() + ": "
+	level := record.Level.String() + ":"
 
 	switch record.Level {
 	case slog.LevelDebug:
@@ -50,7 +50,11 @@ func (h *PrettyHandler) Handle(ctx context.Context, record slog.Record) error {
 	timeStr := record.Time.Format("[15:05:05.000]")
 	msg := color.CyanString(record.Message)
 
-	h.l.Println(timeStr, level, msg, color.WhiteString(string(fieldsBytes)))
+	if len(attrs) != 0 {
+		h.l.Println(timeStr, level, msg, color.WhiteString(string(fieldsBytes)))
+	} else {
+		h.l.Println(timeStr, level, msg)
+	}
 
 	return nil
 }
