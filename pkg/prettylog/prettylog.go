@@ -54,3 +54,7 @@ func (h *PrettyHandler) Handle(ctx context.Context, record slog.Record) error {
 
 	return nil
 }
+
+func Error(err error) slog.Attr {
+	return slog.String("error", err.Error())
+}
