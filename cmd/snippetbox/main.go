@@ -22,7 +22,9 @@ func init() {
 }
 
 func main() {
-	plog := setupPrettyLogger(os.Stdout, slog.LevelDebug)
+	plog := setupPrettyLogger(os.Stdout)
+
+	plog.Debug("Debug messages enabled")
 
 	app := app.NewApplication(plog, cfg)
 
@@ -38,7 +40,22 @@ func main() {
 	}
 }
 
-func setupPrettyLogger(w io.Writer, level slog.Level) *slog.Logger {
+func setupPrettyLogger(w io.Writer) *slog.Logger {
+	levelEnv := os.Getenv("LOG_LEVEL")
+
+	var level slog.Level
+
+	switch levelEnv {
+	case "debug":
+		level = slog.LevelDebug
+	case "warn":
+		level = slog.LevelWarn
+	case "error":
+		level = slog.LevelError
+	default:
+		level = slog.LevelInfo
+	}
+
 	h := prettylog.NewPrettyHandler(w, slog.HandlerOptions{
 		Level: level,
 	})
