@@ -1,11 +1,25 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"net/http"
 
 	"github.com/bytemeprod/snippetbox/internal/handlers"
 )
+
+type config struct {
+	addr      string
+	staticDir string
+}
+
+var cfg config
+
+func init() {
+	flag.StringVar(&cfg.addr, "addr", ":4040", "HTTP network address to start server")
+	flag.StringVar(&cfg.staticDir, "staticDir", "./frontend/static", "Path to static files")
+	flag.Parse()
+}
 
 func main() {
 	mux := http.NewServeMux()
@@ -17,7 +31,7 @@ func main() {
 	mux.HandleFunc("/snippet/create", handlers.SnippetCreate)
 	mux.HandleFunc("/snippet/view", handlers.SnippetView)
 
-	log.Println("Server starting on :4000")
+	log.Printf("Server starting on %s\n", cfg.addr)
 
-	http.ListenAndServe(":4000", mux)
+	http.ListenAndServe(cfg.addr, mux)
 }
