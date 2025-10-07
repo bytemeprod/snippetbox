@@ -15,6 +15,7 @@ type config struct {
 
 var cfg config
 
+// Parsing flags
 func init() {
 	flag.StringVar(&cfg.addr, "addr", ":4040", "HTTP network address to start server")
 	flag.StringVar(&cfg.staticDir, "staticDir", "./frontend/static", "Path to static files")
@@ -33,5 +34,12 @@ func main() {
 
 	log.Printf("Server starting on %s\n", cfg.addr)
 
-	http.ListenAndServe(cfg.addr, mux)
+	server := http.Server{
+		Addr:    cfg.addr,
+		Handler: mux,
+	}
+
+	if err := server.ListenAndServe(); err != nil {
+		log.Fatal(err)
+	}
 }
