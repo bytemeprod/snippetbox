@@ -2,44 +2,45 @@ package main
 
 import (
 	"flag"
-	"log"
+	"io"
+	"log/slog"
 	"net/http"
+	"os"
 
-	"github.com/bytemeprod/snippetbox/internal/handlers"
+	"github.com/bytemeprod/snippetbox/internal/app"
+	"github.com/bytemeprod/snippetbox/pkg/prettylog"
 )
 
-type config struct {
-	addr      string
-	staticDir string
-}
+// Declaring our config
+var cfg app.Config
 
-var cfg config
-
-// Parsing flags
+// Parsing flags to config
 func init() {
-	flag.StringVar(&cfg.addr, "addr", ":4040", "HTTP network address to start server")
-	flag.StringVar(&cfg.staticDir, "staticDir", "./frontend/static", "Path to static files")
+	flag.StringVar(&cfg.Addr, "addr", ":4040", "HTTP network address to start server")
+	flag.StringVar(&cfg.StaticDir, "staticDir", "./frontend/static", "Path to static files")
 	flag.Parse()
 }
 
 func main() {
-	mux := http.NewServeMux()
+	plog := setupPrettyLogger(os.Stdout, slog.LevelDebug)
 
-	fileServer := http.FileServer(http.Dir("./frontend/static"))
-
-	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
-	mux.HandleFunc("/", handlers.Home)
-	mux.HandleFunc("/snippet/create", handlers.SnippetCreate)
-	mux.HandleFunc("/snippet/view", handlers.SnippetView)
-
-	log.Printf("Server starting on %s\n", cfg.addr)
+	app := app.NewApplication(plog, cfg)
 
 	server := http.Server{
-		Addr:    cfg.addr,
-		Handler: mux,
+		Addr:    cfg.Addr,
+		Handler: app.SetupRoutes(),
 	}
 
+	plog.Info("Server starting...", slog.String("port", cfg.Addr))
+
 	if err := server.ListenAndServe(); err != nil {
-		log.Fatal(err)
+		plog.Error("Error", slog.String("error", err.Error()))
 	}
+}
+
+func setupPrettyLogger(w io.Writer, level slog.Level) *slog.Logger {
+	h := prettylog.NewPrettyHandler(w, slog.HandlerOptions{
+		Level: level,
+	})
+	return slog.New(h)
 }
