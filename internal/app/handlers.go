@@ -12,7 +12,7 @@ import (
 
 func (a *Application) NewHome(plog *slog.Logger) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/" {
+		if r.URL.Path != "/" || r.Method != http.MethodGet {
 			http.NotFound(w, r)
 			return
 		}
