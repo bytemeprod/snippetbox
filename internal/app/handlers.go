@@ -13,7 +13,7 @@ import (
 func (a *Application) NewHome(plog *slog.Logger) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/" || r.Method != http.MethodGet {
-			http.NotFound(w, r)
+			a.notFound(w)
 			return
 		}
 
@@ -25,15 +25,13 @@ func (a *Application) NewHome(plog *slog.Logger) func(http.ResponseWriter, *http
 		ts, err := template.ParseFiles(files...)
 		if err != nil {
 			plog.Error("Failed to parse templates: ", prettylog.Error(err))
-
-			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			a.serverError(w, err)
 			return
 		}
 
 		if err := ts.ExecuteTemplate(w, "base", nil); err != nil {
 			plog.Error("Failed to execute template: ", prettylog.Error(err))
-
-			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			a.serverError(w, err)
 			return
 		}
 	}
@@ -43,7 +41,7 @@ func (a *Application) NewSnippetCreate(plog *slog.Logger) func(http.ResponseWrit
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			w.Header().Set("Allow", http.MethodPost)
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			a.clientError(w, http.StatusMethodNotAllowed)
 			return
 		}
 
@@ -55,7 +53,7 @@ func (a *Application) NewSnippetView(plog *slog.Logger) func(http.ResponseWriter
 	return func(w http.ResponseWriter, r *http.Request) {
 		id, err := strconv.Atoi(r.URL.Query().Get("id"))
 		if err != nil || id < 1 {
-			http.NotFound(w, r)
+			a.notFound(w)
 			return
 		}
 
